@@ -1274,11 +1274,11 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener
             callbackData = originateCallbacks.get(traceId);
             if (callbackData == null)
             {
-            	removeCallback(traceId);
                 return;
             }
+            originateCallbacks.remove(traceId);
         }
-        
+
         cb = callbackData.getCallback();
         if (!AstUtil.isNull(originateEvent.getUniqueId()))
         {
@@ -1297,21 +1297,18 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener
 
                 cause = new NoSuchChannelException(
                         "Channel '" + callbackData.getOriginateAction().getChannel() + "' is not available");
-                removeCallback(traceId);
                 cb.onFailure(cause);
                 return;
             }
 
             if (channel.wasInState(ChannelState.UP))
             {
-            	removeCallback(traceId);
                 cb.onSuccess(channel);
                 return;
             }
 
             if (channel.wasBusy())
             {
-            	removeCallback(traceId);
                 cb.onBusy(channel);
                 return;
             }
@@ -1330,7 +1327,6 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener
                 // the originate event
                 if (otherChannel.wasBusy())
                 {
-                	removeCallback(traceId);
                     cb.onBusy(channel);
                     return;
                 }
@@ -1344,7 +1340,6 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener
                 // but we only look at the last one.
                 if (dialedChannel != null && dialedChannel.wasBusy())
                 {
-                	removeCallback(traceId);
                     cb.onBusy(channel);
                     return;
                 }
@@ -1355,16 +1350,9 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener
         }
         catch (Throwable t)
         {
-        	removeCallback(traceId);
             logger.warn("Exception dispatching originate progress", t);
         }
     }
-
-	private void removeCallback(final String traceId) {
-		synchronized (originateCallbacks) {
-			originateCallbacks.remove(traceId);
-		}
-	}
 
     @Override
     public void shutdown()
